@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:amazon="http://schemas.android.com/apk/lib/com.amazon.device.ads"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
-    id="phonegap-plugin-push"
+    id="phonegap-plugin-push-aliyun"
     version="1.7.1">
 
   <name>PushPlugin</name>
