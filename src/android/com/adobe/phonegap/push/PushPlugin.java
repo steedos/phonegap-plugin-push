@@ -25,6 +25,12 @@ import java.util.Iterator;
 
 import me.leolin.shortcutbadger.ShortcutBadger;
 
+import com.alibaba.sdk.android.AlibabaSDK;
+import com.alibaba.sdk.android.callback.InitResultCallback;
+import com.alibaba.sdk.android.push.CloudPushService;
+import com.alibaba.sdk.android.push.CommonCallback;
+import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory;
+
 public class PushPlugin extends CordovaPlugin implements PushConstants {
 
     public static final String LOG_TAG = "PushPlugin";
@@ -42,6 +48,23 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         return this.cordova.getActivity().getApplicationContext();
     }
 
+
+    private void initAliyunCloudChannel(Context applicationContext){
+        PushServiceFactory.init(applicationContext);
+        CloudPushService pushService = PushServiceFactory.getCloudPushService();
+        pushService.register(applicationContext, new CommonCallback(){
+            @Override
+            public void onSuccess(String response){
+                Log.d(TAG, "init AliyunCloudChannel success");
+            }
+
+            @Override
+            public void OnFailed(String errorCode, String errorMessage){
+                Log.d(TAG, "init AliyunCloudChannel failed --errorCode:" + errorCode + " -- errorMessage:" + errorMessage);
+            }
+        })
+    }
+
     @Override
     public boolean execute(final String action, final JSONArray data, final CallbackContext callbackContext) {
         Log.v(LOG_TAG, "execute: action=" + action);
@@ -50,6 +73,10 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         if (INITIALIZE.equals(action)) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
+
+                    //初始化阿里云推送
+                    initAliyunCloudChannel(getApplicationContext());
+
                     pushContext = callbackContext;
                     JSONObject jo = null;
 
@@ -70,6 +97,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         String savedSenderID = sharedPref.getString(SENDER_ID, "");
                         String savedRegID = sharedPref.getString(REGISTRATION_ID, "");
 
+                        /*
                         // first time run get new token
                         if ("".equals(savedRegID)) {
                             token = InstanceID.getInstance(getApplicationContext()).getToken(senderID, GCM);
@@ -82,6 +110,10 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         else {
                             token = sharedPref.getString(REGISTRATION_ID, "");
                         }
+                        */
+
+                        //使用aliyun push返回的设备号
+                        token = PushServiceFactory.getCloudPushService().getDeviceId();
 
                         if (!"".equals(token)) {
                             JSONObject json = new JSONObject().put(REGISTRATION_ID, token);
