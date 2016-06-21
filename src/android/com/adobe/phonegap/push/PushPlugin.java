@@ -62,7 +62,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
             public void OnFailed(String errorCode, String errorMessage){
                 Log.d(TAG, "init AliyunCloudChannel failed --errorCode:" + errorCode + " -- errorMessage:" + errorMessage);
             }
-        })
+        });
     }
 
     @Override
