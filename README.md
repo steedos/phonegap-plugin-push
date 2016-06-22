@@ -23,4 +23,9 @@ This plugin offers support to receive and handle native push notifications with 
 
 安装完成后，拷贝libs下的文件到 platforms/android的libs中
 
-在修改AndroidManifest.xml文件中修改 配置appkey 和 appsecret
+请在AndroidManifest.xml 文件中配置属性：
+<meta-data
+android:name="com.alibaba.app.appkey"
+    android:value="******" /> <!--TODO  请填写应用对应的 appKye-->
+<meta-data android:name="com.alibaba.app.appsecret" 
+    android:value="******" /> <!--TODO  请填写应用对应的 appSecret-->

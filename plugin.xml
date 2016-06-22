@@ -69,12 +69,6 @@
 
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
 
-            <meta-data
-            android:name="com.alibaba.app.appkey"
-                android:value="******" /> <!--TODO  请填写应用对应的 appKye-->
-            <meta-data android:name="com.alibaba.app.appsecret" 
-                android:value="******" /> <!--TODO  请填写应用对应的 appSecret-->
-
             <!-- 通道保持服务 -->
             <service
                 android:name="com.alibaba.sdk.android.push.ChannelService"
