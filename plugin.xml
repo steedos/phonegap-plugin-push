@@ -71,9 +71,9 @@
 
             <meta-data
             android:name="com.alibaba.app.appkey"
-                android:value="23267207" />
+                android:value="******" /> <!--TODO  请填写应用对应的 appKye-->
             <meta-data android:name="com.alibaba.app.appsecret" 
-                android:value="379089f0019f8faba0c61fcdf00f678f" />
+                android:value="******" /> <!--TODO  请填写应用对应的 appSecret-->
 
             <!-- 通道保持服务 -->
             <service

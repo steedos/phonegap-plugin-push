@@ -16,3 +16,11 @@ This plugin offers support to receive and handle native push notifications with 
 - [Push notification payload details](docs/PAYLOAD.md)
 - [Contributing](.github/CONTRIBUTING.md)
 - [License (MIT)](MIT-LICENSE)
+
+
+# 安装 
+> cordova plugin add https://github.com/steedos/phonegap-plugin-push-aliyun.git --variable SENDER_ID=YOUR SENDER_ID
+
+安装完成后，拷贝libs下的文件到 platforms/android的libs中
+
+在修改AndroidManifest.xml文件中修改 配置appkey 和 appsecret
