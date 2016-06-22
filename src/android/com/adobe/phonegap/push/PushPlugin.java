@@ -26,6 +26,7 @@ import java.util.Iterator;
 import me.leolin.shortcutbadger.ShortcutBadger;
 
 import com.alibaba.sdk.android.AlibabaSDK;
+import com.alibaba.sdk.android.SdkConstants;
 import com.alibaba.sdk.android.callback.InitResultCallback;
 import com.alibaba.sdk.android.push.CloudPushService;
 import com.alibaba.sdk.android.push.CommonCallback;
@@ -49,21 +50,130 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
     }
 
 
-    private void initAliyunCloudChannel(Context applicationContext){
+    private void initOneSDK(final Context applicationContext,final JSONArray data, final CallbackContext callbackContext){
+        Log.d(LOG_TAG, "get App Package name : " + applicationContext.getPackageName());
+
+        AlibabaSDK.asyncInit(applicationContext, new InitResultCallback(){
+            public void onSuccess(){
+                Log.e(LOG_TAG, "init onesdk success");
+                initAliyunCloudChannel(applicationContext, data, callbackContext);
+            }
+
+            
+            public void onFailure(int code, String message){
+                Log.e(LOG_TAG, "init onesdk failed : " + message);
+            }
+
+        });
+    }
+
+
+    private void initAliyunCloudChannel(Context applicationContext, final JSONArray data, final CallbackContext callbackContext){
         PushServiceFactory.init(applicationContext);
         CloudPushService pushService = PushServiceFactory.getCloudPushService();
         pushService.register(applicationContext, new CommonCallback(){
             @Override
             public void onSuccess(String response){
-                Log.d(TAG, "init AliyunCloudChannel success");
+                Log.d(LOG_TAG, "init AliyunCloudChannel success, device id : " + PushServiceFactory.getCloudPushService().getDeviceId() + ",UtDid: " + PushServiceFactory.getCloudPushService().getUTDeviceId() + ", Appkey: " + AlibabaSDK.getGlobalProperty(SdkConstants.APP_KEY));
+                initPush(data, callbackContext);
             }
 
             @Override
-            public void OnFailed(String errorCode, String errorMessage){
-                Log.d(TAG, "init AliyunCloudChannel failed --errorCode:" + errorCode + " -- errorMessage:" + errorMessage);
+            public void onFailed(String errorCode, String errorMessage){
+                Log.d(LOG_TAG, "init AliyunCloudChannel failed --errorCode:" + errorCode + " -- errorMessage:" + errorMessage);
             }
         });
     }
+
+
+    private void initPush(final JSONArray data, final CallbackContext callbackContext){
+        pushContext = callbackContext;
+        JSONObject jo = null;
+
+        Log.v(LOG_TAG, "execute: data=" + data.toString());
+        SharedPreferences sharedPref = getApplicationContext().getSharedPreferences(COM_ADOBE_PHONEGAP_PUSH, Context.MODE_PRIVATE);
+        String token = null;
+        String senderID = null;
+
+        try {
+            jo = data.getJSONObject(0).getJSONObject(ANDROID);
+
+            Log.v(LOG_TAG, "execute: jo=" + jo.toString());
+
+            senderID = jo.getString(SENDER_ID);
+
+            Log.v(LOG_TAG, "execute: senderID=" + senderID);
+
+            String savedSenderID = sharedPref.getString(SENDER_ID, "");
+            String savedRegID = sharedPref.getString(REGISTRATION_ID, "");
+
+            /*
+            // first time run get new token
+            if ("".equals(savedRegID)) {
+                token = InstanceID.getInstance(getApplicationContext()).getToken(senderID, GCM);
+            }
+            // new sender ID, re-register
+            else if (!savedSenderID.equals(senderID)) {
+                token = InstanceID.getInstance(getApplicationContext()).getToken(senderID, GCM);
+            }
+            // use the saved one
+            else {
+                token = sharedPref.getString(REGISTRATION_ID, "");
+            }
+            */
+
+            //使用aliyun push返回的设备号
+            token = PushServiceFactory.getCloudPushService().getDeviceId();
+
+            if (!"".equals(token)) {
+                JSONObject json = new JSONObject().put(REGISTRATION_ID, token);
+
+                Log.v(LOG_TAG, "onRegistered: " + json.toString());
+
+                JSONArray topics = jo.optJSONArray(TOPICS);
+                subscribeToTopics(topics, token);
+
+                PushPlugin.sendEvent( json );
+            } else {
+                callbackContext.error("Empty registration ID received from GCM");
+                return;
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "execute: Got JSON Exception " + e.getMessage());
+            callbackContext.error(e.getMessage());
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "execute: Got JSON Exception " + e.getMessage());
+            callbackContext.error(e.getMessage());
+        }
+
+        if (jo != null) {
+            SharedPreferences.Editor editor = sharedPref.edit();
+            try {
+                editor.putString(ICON, jo.getString(ICON));
+            } catch (JSONException e) {
+                Log.d(LOG_TAG, "no icon option");
+            }
+            try {
+                editor.putString(ICON_COLOR, jo.getString(ICON_COLOR));
+            } catch (JSONException e) {
+                Log.d(LOG_TAG, "no iconColor option");
+            }
+            editor.putBoolean(SOUND, jo.optBoolean(SOUND, true));
+            editor.putBoolean(VIBRATE, jo.optBoolean(VIBRATE, true));
+            editor.putBoolean(CLEAR_NOTIFICATIONS, jo.optBoolean(CLEAR_NOTIFICATIONS, true));
+            editor.putBoolean(FORCE_SHOW, jo.optBoolean(FORCE_SHOW, false));
+            editor.putString(SENDER_ID, senderID);
+            editor.putString(REGISTRATION_ID, token);
+            editor.commit();
+        }
+
+        if (gCachedExtras != null) {
+            Log.v(LOG_TAG, "sending cached extras");
+            sendExtras(gCachedExtras);
+            gCachedExtras = null;
+        }
+    }
+
 
     @Override
     public boolean execute(final String action, final JSONArray data, final CallbackContext callbackContext) {
@@ -73,95 +183,8 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         if (INITIALIZE.equals(action)) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
-
-                    //初始化阿里云推送
-                    initAliyunCloudChannel(getApplicationContext());
-
-                    pushContext = callbackContext;
-                    JSONObject jo = null;
-
-                    Log.v(LOG_TAG, "execute: data=" + data.toString());
-                    SharedPreferences sharedPref = getApplicationContext().getSharedPreferences(COM_ADOBE_PHONEGAP_PUSH, Context.MODE_PRIVATE);
-                    String token = null;
-                    String senderID = null;
-
-                    try {
-                        jo = data.getJSONObject(0).getJSONObject(ANDROID);
-
-                        Log.v(LOG_TAG, "execute: jo=" + jo.toString());
-
-                        senderID = jo.getString(SENDER_ID);
-
-                        Log.v(LOG_TAG, "execute: senderID=" + senderID);
-
-                        String savedSenderID = sharedPref.getString(SENDER_ID, "");
-                        String savedRegID = sharedPref.getString(REGISTRATION_ID, "");
-
-                        /*
-                        // first time run get new token
-                        if ("".equals(savedRegID)) {
-                            token = InstanceID.getInstance(getApplicationContext()).getToken(senderID, GCM);
-                        }
-                        // new sender ID, re-register
-                        else if (!savedSenderID.equals(senderID)) {
-                            token = InstanceID.getInstance(getApplicationContext()).getToken(senderID, GCM);
-                        }
-                        // use the saved one
-                        else {
-                            token = sharedPref.getString(REGISTRATION_ID, "");
-                        }
-                        */
-
-                        //使用aliyun push返回的设备号
-                        token = PushServiceFactory.getCloudPushService().getDeviceId();
-
-                        if (!"".equals(token)) {
-                            JSONObject json = new JSONObject().put(REGISTRATION_ID, token);
-
-                            Log.v(LOG_TAG, "onRegistered: " + json.toString());
-
-                            JSONArray topics = jo.optJSONArray(TOPICS);
-                            subscribeToTopics(topics, token);
-
-                            PushPlugin.sendEvent( json );
-                        } else {
-                            callbackContext.error("Empty registration ID received from GCM");
-                            return;
-                        }
-                    } catch (JSONException e) {
-                        Log.e(LOG_TAG, "execute: Got JSON Exception " + e.getMessage());
-                        callbackContext.error(e.getMessage());
-                    } catch (IOException e) {
-                        Log.e(LOG_TAG, "execute: Got JSON Exception " + e.getMessage());
-                        callbackContext.error(e.getMessage());
-                    }
-
-                    if (jo != null) {
-                        SharedPreferences.Editor editor = sharedPref.edit();
-                        try {
-                            editor.putString(ICON, jo.getString(ICON));
-                        } catch (JSONException e) {
-                            Log.d(LOG_TAG, "no icon option");
-                        }
-                        try {
-                            editor.putString(ICON_COLOR, jo.getString(ICON_COLOR));
-                        } catch (JSONException e) {
-                            Log.d(LOG_TAG, "no iconColor option");
-                        }
-                        editor.putBoolean(SOUND, jo.optBoolean(SOUND, true));
-                        editor.putBoolean(VIBRATE, jo.optBoolean(VIBRATE, true));
-                        editor.putBoolean(CLEAR_NOTIFICATIONS, jo.optBoolean(CLEAR_NOTIFICATIONS, true));
-                        editor.putBoolean(FORCE_SHOW, jo.optBoolean(FORCE_SHOW, false));
-                        editor.putString(SENDER_ID, senderID);
-                        editor.putString(REGISTRATION_ID, token);
-                        editor.commit();
-                    }
-
-                    if (gCachedExtras != null) {
-                        Log.v(LOG_TAG, "sending cached extras");
-                        sendExtras(gCachedExtras);
-                        gCachedExtras = null;
-                    }
+                    //初始化阿里云SDK
+                    initOneSDK(getApplicationContext(), data, callbackContext);
                 }
             });
         } else if (UNREGISTER.equals(action)) {

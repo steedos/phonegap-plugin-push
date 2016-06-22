@@ -42,16 +42,107 @@
         </config-file>
 
 		<config-file target="AndroidManifest.xml" parent="/manifest">
+            
+            <!-- 阿里移动推送相关权限 -->
+            <uses-permission android:name="android.permission.WRITE_SETTINGS" />
             <uses-permission android:name="android.permission.INTERNET" />
-			<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-			<uses-permission android:name="android.permission.WAKE_LOCK" />
-			<uses-permission android:name="android.permission.VIBRATE"/>
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+            <uses-permission android:name="android.permission.BROADCAST_PACKAGE_CHANGED" />
+            <uses-permission android:name="android.permission.BROADCAST_PACKAGE_REPLACED" />
+            <uses-permission android:name="android.permission.RESTART_PACKAGES" />
+            <uses-permission android:name="android.permission.GET_TASKS" />
+            <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+            <uses-permission android:name="android.permission.VIBRATE" />
+
+
 			<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 			<permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
 			<uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
 		</config-file>
 
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
+
+            <meta-data
+            android:name="com.alibaba.app.appkey"
+                android:value="23267207" />
+            <meta-data android:name="com.alibaba.app.appsecret" 
+                android:value="379089f0019f8faba0c61fcdf00f678f" />
+
+            <!-- 通道保持服务 -->
+            <service
+                android:name="com.alibaba.sdk.android.push.ChannelService"
+                android:exported="true"
+                android:process=":channel" >
+                <intent-filter>
+                    <action android:name="com.taobao.accs.intent.action.SERVICE" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="org.agoo.android.intent.action.PING_V4" />
+
+                    <category android:name="taobao" />
+                </intent-filter>
+            </service>
+
+            <!-- 消息接收服务 -->
+            <service
+                android:name="com.alibaba.sdk.android.push.MsgService"
+                android:exported="false" >
+                <intent-filter>
+                    <action android:name="com.taobao.accs.intent.action.RECEIVE" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="com.alibaba.sdk.android.push.NOTIFY_ACTION" />
+                </intent-filter>
+            </service>
+
+            <!-- 连接心跳保持监听器 -->
+            <receiver android:name="anet.channel.heartbeat.HeartbeatManager$Receiver" >
+                <intent-filter>
+                    <action android:name="anetwork.channel.intent.action.COMMAND" />
+                </intent-filter>
+            </receiver>
+
+            <!-- 消息接收监听器 -->
+            <receiver android:name="com.alibaba.sdk.android.push.MessageReceiver" >
+                <intent-filter>
+                    <action android:name="com.alibaba.push2.action.NOTIFICATION_OPENED" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="com.alibaba.push2.action.NOTIFICATION_REMOVED" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="com.taobao.accs.intent.action.COMMAND" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="com.taobao.taobao.intent.action.COMMAND" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="org.agoo.android.intent.action.RECEIVE" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="android.intent.action.USER_PRESENT" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="android.intent.action.PACKAGE_REMOVED" />
+
+                    <data android:scheme="package" />
+                </intent-filter>
+            </receiver>
+
+
 			<activity android:name="com.adobe.phonegap.push.PushHandlerActivity" android:exported="true"/>
             <receiver android:name="com.adobe.phonegap.push.BackgroundActionButtonHandler"/>
 
