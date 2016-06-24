@@ -100,7 +100,8 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
             Log.v(LOG_TAG, "execute: jo=" + jo.toString());
 
-            senderID = jo.getString(SENDER_ID);
+            //senderID = jo.getString(SENDER_ID);
+            senderID = AlibabaSDK.getGlobalProperty(SdkConstants.APP_KEY);
 
             Log.v(LOG_TAG, "execute: senderID=" + senderID);
 
@@ -124,6 +125,8 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
             //使用aliyun push返回的设备号
             token = PushServiceFactory.getCloudPushService().getDeviceId();
+
+            token = "aliyun:" + token
 
             if (!"".equals(token)) {
                 JSONObject json = new JSONObject().put(REGISTRATION_ID, token);
