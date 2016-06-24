@@ -126,7 +126,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
             //使用aliyun push返回的设备号
             token = PushServiceFactory.getCloudPushService().getDeviceId();
 
-            token = "aliyun:" + token
+            token = "aliyun:" + token;
 
             if (!"".equals(token)) {
                 JSONObject json = new JSONObject().put(REGISTRATION_ID, token);
