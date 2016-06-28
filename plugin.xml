@@ -210,7 +210,7 @@
                     <action android:name="com.huawei.intent.action.PUSH"/>
                     <action android:name="com.huawei.intent.action.PUSH_STATE"/>
                 </intent-filter>
-            </receive
+            </receive>
 		</config-file>
 
         <framework src="push.gradle" custom="true" type="gradleReference" />
