@@ -73,16 +73,16 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
     private void initAliyunCloudChannel(Context applicationContext, final JSONArray data, final CallbackContext callbackContext){
         PushServiceFactory.init(applicationContext);
         CloudPushService pushService = PushServiceFactory.getCloudPushService();
+
+        // 注册方法会自动判断是否支持小米系统推送，如不支持会跳过注册。
+        MiPushRegister.register(applicationContext, "2882303761517334757", "5281733465757");
+        // 注册方法会自动判断是否支持华为系统推送，如不支持会跳过注册。
+        HuaWeiRegister.register(applicationContext);
+        
         pushService.register(applicationContext, new CommonCallback(){
             @Override
             public void onSuccess(String response){
                 Log.d(LOG_TAG, "init AliyunCloudChannel success, device id : " + PushServiceFactory.getCloudPushService().getDeviceId() + ",UtDid: " + PushServiceFactory.getCloudPushService().getUTDeviceId() + ", Appkey: " + AlibabaSDK.getGlobalProperty(SdkConstants.APP_KEY));
-                
-                // 注册方法会自动判断是否支持小米系统推送，如不支持会跳过注册。
-                MiPushRegister.register(applicationContext, "小米AppID", "小米AppKey");
-                // 注册方法会自动判断是否支持华为系统推送，如不支持会跳过注册。
-                HuaWeiRegister.register(applicationContext);
-
                 initPush(data, callbackContext);
             }
 
