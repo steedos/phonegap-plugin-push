@@ -61,6 +61,12 @@
             <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
             <uses-permission android:name="android.permission.VIBRATE" />
 
+            <!--小米通道相关权限 你的包名.permission.MIPUSH_RECEIVE-->
+            <permission
+                android:name="com.steedos.workflow.permission.MIPUSH_RECEIVE"
+                android:protectionLevel="signatureOrSystem"/>
+            <uses-permission android:name="com.steedos.workflow.permission.MIPUSH_RECEIVE"/>
+
 
 			<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 			<permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
@@ -167,6 +173,44 @@
                 android:name="com.adobe.phonegap.push.RegistrationIntentService"
                 android:exported="false">
             </service>
+
+
+            <!-- 小米通道官方配置 -->
+            <service android:name="com.xiaomi.push.service.XMPushService" android:enabled="true" android:process=":channel" />
+            <service android:name="com.xiaomi.mipush.sdk.PushMessageHandler" android:enabled="true" android:exported="true" />
+            <service android:enabled="true" android:name="com.xiaomi.mipush.sdk.MessageHandleService" />
+            <receiver android:name="com.alibaba.sdk.android.push.MiPushBroadcastReceiver" android:exported="true" >
+                <intent-filter>
+                    <action android:name="com.xiaomi.mipush.RECEIVE_MESSAGE" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="com.xiaomi.mipush.MESSAGE_ARRIVED" />
+                </intent-filter>
+                <intent-filter>
+                    <action android:name="com.xiaomi.mipush.ERROR" />
+                </intent-filter>
+            </receiver>
+            <receiver android:name="com.xiaomi.push.service.receivers.NetworkStatusReceiver" android:exported="true" >
+                <intent-filter>
+                    <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                </intent-filter>
+            </receiver>
+            <receiver android:name="com.xiaomi.push.service.receivers.PingReceiver" android:exported="false" android:process=":channel" >
+                <intent-filter>
+                    <action android:name="com.xiaomi.push.PING_TIMER" />
+                </intent-filter>
+            </receiver>
+
+            <!-- 华为通道官方配置 -->
+            <receiver android:name="com.alibaba.sdk.android.push.HuaWeiReceiver">
+                <intent-filter>
+                    <action android:name="com.huawei.android.push.intent.REGISTRATION"/>
+                    <action android:name="com.huawei.android.push.intent.RECEIVE"/>
+                    <action android:name="com.huawei.intent.action.PUSH"/>
+                    <action android:name="com.huawei.intent.action.PUSH_STATE"/>
+                </intent-filter>
+            </receive
 		</config-file>
 
         <framework src="push.gradle" custom="true" type="gradleReference" />

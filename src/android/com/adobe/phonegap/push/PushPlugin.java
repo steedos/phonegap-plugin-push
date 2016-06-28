@@ -75,6 +75,12 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
             @Override
             public void onSuccess(String response){
                 Log.d(LOG_TAG, "init AliyunCloudChannel success, device id : " + PushServiceFactory.getCloudPushService().getDeviceId() + ",UtDid: " + PushServiceFactory.getCloudPushService().getUTDeviceId() + ", Appkey: " + AlibabaSDK.getGlobalProperty(SdkConstants.APP_KEY));
+                
+                // 注册方法会自动判断是否支持小米系统推送，如不支持会跳过注册。
+                MiPushRegister.register(applicationContext, "小米AppID", "小米AppKey");
+                // 注册方法会自动判断是否支持华为系统推送，如不支持会跳过注册。
+                HuaWeiRegister.register(applicationContext);
+
                 initPush(data, callbackContext);
             }
 
