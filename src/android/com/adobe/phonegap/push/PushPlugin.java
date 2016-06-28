@@ -32,6 +32,8 @@ import com.alibaba.sdk.android.push.CloudPushService;
 import com.alibaba.sdk.android.push.CommonCallback;
 import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory;
 
+import com.alibab.sdk.android.push.register.*;
+
 public class PushPlugin extends CordovaPlugin implements PushConstants {
 
     public static final String LOG_TAG = "PushPlugin";
